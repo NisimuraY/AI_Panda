@@ -1,11 +1,13 @@
 #include "Enemy.h"
 #include "time.h"
 #include "Stage.h"
+#include "Player.h"
 
 namespace
 {
 	const int ENEMY_SIZE = 48; //敵のサイズ 32*32
-	const Point ENEMY_START_POS = { 20 * ENEMY_SIZE, 10 * ENEMY_SIZE }; //敵の初期位置
+	//const Point ENEMY_START_POS = { 20 * ENEMY_SIZE, 10 * ENEMY_SIZE }; //敵の初期位置
+	const Point ENEMY_START_POS = { 2 * ENEMY_SIZE, 12 * ENEMY_SIZE }; //敵の初期位置
 	const DIR INIT_ENEMY_DIR = { LEFT };
 	const int ENEMY_DRAW_SIZE = 32; //敵の描画サイズ
 	const int animFrame[4]{ 0, 1, 2, 1 };
@@ -66,8 +68,9 @@ void Enemy::Update()
 		if (mapValue != 1)
 		{
 			pos_ = newPos;
-		}else
-		/*if (mapValue == 1)*/
+		}
+		
+		else if(!nearPlayer())/*if (mapValue == 1)*/
 		{
 			switch (dir_)
 			{
@@ -89,6 +92,34 @@ void Enemy::Update()
 		}
 
 		prog_timer = 0.5f + prog_timer;
+	}
+	
+	Player*  p = FindGameObject<Player>();
+	Point pPos = p->GetPlayerPos();
+
+	if (nearPlayer()) 
+	{
+		if (pPos.x > pos_.x)
+		{
+			dir_ = RIGHT;
+			newPos.x += ENEMY_DRAW_SIZE;
+		}
+		else
+		{
+			dir_ = LEFT;
+			newPos.x -= ENEMY_DRAW_SIZE;
+		}
+
+		if (pPos.y < pos_.y)
+		{
+			dir_ = UP;
+			newPos.y -= ENEMY_DRAW_SIZE;
+		}
+		else
+		{
+			dir_ = DOWN;
+			newPos.y += ENEMY_DRAW_SIZE;
+		}
 	}
 
 }
@@ -114,4 +145,18 @@ void Enemy::Draw()
 		animTimer = ANIM_INTERVAL + animTimer;
 	}
 	animTimer = animTimer - Time::DeltaTime();
+}
+
+bool Enemy::nearPlayer()
+{
+	Player* p = FindGameObject<Player>();
+	Point pPos = p->GetPlayerPos();
+
+	if ((pPos.x - pos_.x - pPos.y - pos_.y) *
+		(pPos.x - pos_.x - pPos.y - pos_.y) <= 9 * ENEMY_DRAW_SIZE)
+	{
+		return true;
+	}
+	
+	return false;
 }
