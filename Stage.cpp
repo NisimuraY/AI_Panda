@@ -59,6 +59,5 @@ void Stage::Draw()
 
 int Stage::GetMap(int x, int y)
 {
-
 	return stageData[y][x];
 }

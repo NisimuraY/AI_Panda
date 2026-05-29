@@ -15,6 +15,8 @@ public:
 	void Update() override;
 	void Draw() override;
 private:
-	bool nearPlayer();
+	bool NearPlayer();
+	bool FindPlayer();
+	void EnemyView();
 };
 

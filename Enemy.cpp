@@ -6,12 +6,13 @@
 namespace
 {
 	const int ENEMY_SIZE = 48; //敵のサイズ 32*32
-	//const Point ENEMY_START_POS = { 20 * ENEMY_SIZE, 10 * ENEMY_SIZE }; //敵の初期位置
-	const Point ENEMY_START_POS = { 2 * ENEMY_SIZE, 12 * ENEMY_SIZE }; //敵の初期位置
+	const Point ENEMY_START_POS = { 20 * ENEMY_SIZE, 10 * ENEMY_SIZE }; //敵の初期位置
+	//const Point ENEMY_START_POS = { 2 * ENEMY_SIZE, 12 * ENEMY_SIZE }; //敵の初期位置
 	const DIR INIT_ENEMY_DIR = { LEFT };
 	const int ENEMY_DRAW_SIZE = 32; //敵の描画サイズ
 	const int animFrame[4]{ 0, 1, 2, 1 };
 	const float ANIM_INTERVAL = 0.2f;
+	float DegToRad = 0.017453292f;
 }
 
 
@@ -36,16 +37,17 @@ void Enemy::Update()
 	float dt = Time::DeltaTime();
 	dir_timer = dir_timer - dt;
 	prog_timer = prog_timer - dt;
-	/*if (dir_timer < 0.0f)
+
+	if (dir_timer < 0.0f)
 	{
 		dir_ = (DIR)(GetRand(3));
 		dir_timer = 3.0f + dir_timer;
-	}*/
+	}
 
 	Point newPos = pos_;
 	if (prog_timer < 0.0f)
 	{
-		switch (dir_)
+		/*switch (dir_)
 		{
 		case UP:
 			newPos.y -= ENEMY_DRAW_SIZE;
@@ -61,7 +63,7 @@ void Enemy::Update()
 			break;
 		default:
 			break;
-		}
+		}*/
 
 		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x/CHA_SIZE, newPos.y / CHA_SIZE);
 		//移動先がステージの外に出ないようにする
@@ -70,7 +72,7 @@ void Enemy::Update()
 			pos_ = newPos;
 		}
 		
-		else if(!nearPlayer())/*if (mapValue == 1)*/
+		else if (mapValue == 1)
 		{
 			switch (dir_)
 			{
@@ -94,34 +96,15 @@ void Enemy::Update()
 		prog_timer = 0.5f + prog_timer;
 	}
 	
-	Player*  p = FindGameObject<Player>();
+	Player* p = FindGameObject<Player>();
 	Point pPos = p->GetPlayerPos();
+	float dx = pPos.x - pos_.x;
+	float dy = pPos.y - pos_.y;
 
-	if (nearPlayer()) 
+	if (FindPlayer())
 	{
-		if (pPos.x > pos_.x)
-		{
-			dir_ = RIGHT;
-			newPos.x += ENEMY_DRAW_SIZE;
-		}
-		else
-		{
-			dir_ = LEFT;
-			newPos.x -= ENEMY_DRAW_SIZE;
-		}
-
-		if (pPos.y < pos_.y)
-		{
-			dir_ = UP;
-			newPos.y -= ENEMY_DRAW_SIZE;
-		}
-		else
-		{
-			dir_ = DOWN;
-			newPos.y += ENEMY_DRAW_SIZE;
-		}
+		DrawString(10, 10, "FIND", GetColor(0, 0, 0), TRUE);
 	}
-
 }
 
 void Enemy::Draw()
@@ -145,18 +128,145 @@ void Enemy::Draw()
 		animTimer = ANIM_INTERVAL + animTimer;
 	}
 	animTimer = animTimer - Time::DeltaTime();
+
+	EnemyView();
 }
 
-bool Enemy::nearPlayer()
+bool Enemy::NearPlayer()
 {
 	Player* p = FindGameObject<Player>();
 	Point pPos = p->GetPlayerPos();
 
-	if ((pPos.x - pos_.x - pPos.y - pos_.y) *
-		(pPos.x - pos_.x - pPos.y - pos_.y) <= 9 * ENEMY_DRAW_SIZE)
+	float dx = pPos.x - pos_.x;
+	float dy = pPos.y - pos_.y;
+
+	float range = 50.0;
+
+	if ((dx * dx + dy * dy) <= (range * range))
 	{
 		return true;
 	}
-	
+
 	return false;
+}
+
+bool Enemy::FindPlayer()
+{
+	Player* p = FindGameObject<Player>();
+	Point pPos = p->GetPlayerPos();
+
+	// 敵の向きベクトル
+	Point dir = { 0, 1 }; // 下向き
+	switch (dir_)
+	{
+	case UP:
+		dir = { 0, -1 };
+		break;
+	case DOWN:
+		dir = { 0, 1 };
+		break;
+	case LEFT:
+		dir = { -1, 0 };
+		break;
+	case RIGHT:
+		dir = { 1, 0 };
+		break;
+	default:
+		break;
+	}
+
+	// 敵→プレイヤー
+	float dx = pPos.x - pos_.x;
+	float dy = pPos.y - pos_.y;
+
+	// 距離
+	float distance = sqrt(dx * dx + dy * dy);
+
+	// 視界距離
+	float range = 200.0f;
+
+	if (distance > range)
+		return false;
+
+	if (distance <= 0.0f)
+		return true;
+
+	// 正規化
+	dx = dx / distance;
+	dy = dy / distance;
+
+	// 内積
+	float dot = dir.x * dx + dir.y * dy;
+
+	float viewAngle = 45.0f * DegToRad;
+	float cosAngle = cosf(viewAngle);
+
+	if (dot >= cosAngle)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void Enemy::EnemyView()
+{
+	Point dir = { 0,1 };
+
+	switch (dir_)
+	{
+	case UP:    dir = { 0,-1 }; break;
+	case DOWN:  dir = { 0,1 };  break;
+	case LEFT:  dir = { -1,0 }; break;
+	case RIGHT: dir = { 1,0 };  break;
+	}
+
+	float enemyX = pos_.x + ENEMY_DRAW_SIZE / 2.0f;
+	float enemyY = pos_.y + ENEMY_DRAW_SIZE / 2.0f;
+
+	float viewAngle = 45.0f * DegToRad;
+	float cosAngle = cosf(viewAngle);
+
+	float range = 200.0f;
+
+	for (int y = 0; y < STAGE_HEIGHT; y++)
+	{
+		for (int x = 0; x < STAGE_WIDTH; x++)
+		{
+			float cellX = x * CHA_SIZE + CHA_SIZE / 2.0f;
+			float cellY = y * CHA_SIZE + CHA_SIZE / 2.0f;
+
+			float dx = cellX - enemyX;
+			float dy = cellY - enemyY;
+
+			float distance = sqrtf(dx * dx + dy * dy);
+
+			if (distance <= 0.0001f)
+				continue;
+
+			if (distance > range)
+				continue;
+
+			dx /= distance;
+			dy /= distance;
+
+			float dot = dir.x * dx + dir.y * dy;
+
+			if (dot >= cosAngle)
+			{
+				SetDrawBlendMode(DX_BLENDMODE_ALPHA, 80);
+
+				DrawBox(
+					x * CHA_SIZE,
+					y * CHA_SIZE,
+					(x + 1) * CHA_SIZE,
+					(y + 1) * CHA_SIZE,
+					GetColor(255, 255, 0),
+					TRUE
+				);
+
+				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+			}
+		}
+	}
 }
