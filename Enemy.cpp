@@ -38,16 +38,17 @@ void Enemy::Update()
 	dir_timer = dir_timer - dt;
 	prog_timer = prog_timer - dt;
 
-	if (dir_timer < 0.0f)
+	/*if (dir_timer < 0.0f)
 	{
 		dir_ = (DIR)(GetRand(3));
 		dir_timer = 3.0f + dir_timer;
-	}
+	}*/
 
 	Point newPos = pos_;
 	if (prog_timer < 0.0f)
 	{
-		/*switch (dir_)
+		
+		switch (dir_)
 		{
 		case UP:
 			newPos.y -= ENEMY_DRAW_SIZE;
@@ -63,7 +64,7 @@ void Enemy::Update()
 			break;
 		default:
 			break;
-		}*/
+		}
 
 		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x/CHA_SIZE, newPos.y / CHA_SIZE);
 		//移動先がステージの外に出ないようにする
@@ -101,9 +102,25 @@ void Enemy::Update()
 	float dx = pPos.x - pos_.x;
 	float dy = pPos.y - pos_.y;
 
-	if (FindPlayer())
+	if (NearPlayer()||FindPlayer())
 	{
 		DrawString(10, 10, "FIND", GetColor(0, 0, 0), TRUE);
+		if (pPos.y < pos_.y)
+		{
+			dir_ = UP;
+		}
+		if (pPos.y > pos_.y)
+		{
+			dir_ = DOWN;
+		}
+		if (pPos.x < pos_.x)
+		{
+			dir_ = LEFT;
+		}
+		if (pPos.x > pos_.x)
+		{
+			dir_ = RIGHT;
+		}
 	}
 }
 
@@ -140,7 +157,7 @@ bool Enemy::NearPlayer()
 	float dx = pPos.x - pos_.x;
 	float dy = pPos.y - pos_.y;
 
-	float range = 50.0;
+	float range = ENEMY_SIZE * 3;
 
 	if ((dx * dx + dy * dy) <= (range * range))
 	{
@@ -267,6 +284,7 @@ void Enemy::EnemyView()
 
 				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 			}
+			/*if(cellX> enemyX - CHA_SIZE * 3&&)*/
 		}
 	}
 }
