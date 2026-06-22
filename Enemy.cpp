@@ -13,6 +13,9 @@ namespace
 	const int animFrame[4]{ 0, 1, 2, 1 };
 	const float ANIM_INTERVAL = 0.2f;
 	float DegToRad = 0.017453292f;
+	float checkTimer = 7.0f;
+	float MaxCheckTimer = 7.0f;
+
 }
 
 
@@ -22,6 +25,7 @@ Enemy::Enemy()
 	hImage_ = LoadGraph("Assets/panda_R.png");
 	pos_ = ENEMY_START_POS; //32はブロックの位置pos_
 	dir_ = INIT_ENEMY_DIR;
+	state_ = EnemyState::Patrol;
 }
 
 Enemy::~Enemy()
@@ -30,97 +34,59 @@ Enemy::~Enemy()
 
 void Enemy::Update()
 {
-	//GetRand(数値)
-	//3秒に1回向きをランダムに変える
-	static float dir_timer = 3.0f;
-	static float prog_timer = 0.5f;
-	float dt = Time::DeltaTime();
-	dir_timer = dir_timer - dt;
-	prog_timer = prog_timer - dt;
-	//if (dir_timer < 0.0f)
-	//{
-	//	dir_ = (DIR)(GetRand(3));
-	//	dir_timer = 3.0f + dir_timer;
-	//}
-
-	Point newPos = pos_;
-	if (prog_timer < 0.0f)
-	{
-
-		switch (dir_)
-		{
-		case UP:
-			newPos.y -= ENEMY_DRAW_SIZE;
-			break;
-		case DOWN:
-			newPos.y += ENEMY_DRAW_SIZE;
-			break;
-		case LEFT:
-			newPos.x -= ENEMY_DRAW_SIZE;
-			break;z
-		case RIGHT:
-			newPos.x += ENEMY_DRAW_SIZE;
-			break;
-		default:
-			break;
-		}
-
-		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x/CHA_SIZE, newPos.y / CHA_SIZE);
-		//移動先がステージの外に出ないようにする
-		if (mapValue != 1)
-		{
-			pos_ = newPos;
-		}
-		
-		else if (mapValue == 1)
-		{
-			switch (dir_)
-			{
-			case UP:
-				dir_ = RIGHT;
-				break;
-			case DOWN:
-				dir_ = LEFT;
-				break;
-			case LEFT:
-				dir_ = UP;
-				break;
-			case RIGHT:
-				dir_ = DOWN;
-				break;
-			default:
-				break;
-			}
-		}
-
-		prog_timer = 0.5f + prog_timer;
-	}
 	
-	Player* p = FindGameObject<Player>();
-	Point pPos = p->GetPlayerPos();
-	float dx = pPos.x - pos_.x;
-	float dy = pPos.y - pos_.y;
 
-	if (NearPlayer()||FindPlayer())
+	switch (state_)
 	{
-		DrawString(10, 10, "FIND", GetColor(0, 0, 0), TRUE);
-		if (pPos.y < pos_.y)
+	case EnemyState::Patrol:
+		Patrol();
+
+		if (NearPlayer() || FindPlayer())
 		{
-			dir_ = UP;
+			state_ = EnemyState::Chase;
 		}
-		if (pPos.y > pos_.y)
+		break;
+
+	case EnemyState::Chase:
+		Chase();
+		if (!NearPlayer() && !FindPlayer())
 		{
-			dir_ = DOWN;
+			state_ = EnemyState::Search;
 		}
-		if (pPos.x < pos_.x)
+		if (CheckAttackRange())
 		{
-			dir_ = LEFT;
+			state_ = EnemyState::Attack;
 		}
-		if (pPos.x > pos_.x)
+		break;
+
+	case EnemyState::Attack:
+		Attack();	
+
+		if (!CheckAttackRange()&& NearPlayer())
 		{
-			dir_ = RIGHT;
+			state_ = EnemyState::Chase;
 		}
+		if (!(NearPlayer()) && !(FindPlayer()))
+		{
+			state_ = EnemyState::Search;
+		}
+		break;
+
+	case EnemyState::Search:
+		Search();
+		if (NearPlayer() || FindPlayer())
+		{
+			state_ = EnemyState::Chase;
+			checkTimer = MaxCheckTimer;
+		}
+		if (checkTimer < 0.0f)
+		{
+			state_ = EnemyState::Patrol;
+			checkTimer = MaxCheckTimer;
+		}
+		break;
 	}
+
 }
 
 void Enemy::Draw()
@@ -146,6 +112,124 @@ void Enemy::Draw()
 	animTimer = animTimer - Time::DeltaTime();
 
 	EnemyView();
+}
+
+void Enemy::Patrol()
+{
+	if (state_ == EnemyState::Patrol)
+	{
+		DrawString(10, 10, "Patrol", GetColor(0, 0, 0), TRUE);
+	}
+
+	static float dir_timer = 3.0f;
+	static float prog_timer = 0.5f;
+	float dt = Time::DeltaTime();
+	dir_timer = dir_timer - dt;
+	prog_timer = prog_timer - dt;
+
+	Point newPos = pos_;
+	if (prog_timer < 0.0f)
+	{
+
+		switch (dir_)
+		{
+		case UP:
+			newPos.y -= ENEMY_DRAW_SIZE;
+			break;
+		case DOWN:
+			newPos.y += ENEMY_DRAW_SIZE;
+			break;
+		case LEFT:
+			newPos.x -= ENEMY_DRAW_SIZE;
+			break;
+		case RIGHT:
+			newPos.x += ENEMY_DRAW_SIZE;
+			break;
+		default:
+			break;
+		}
+
+		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
+		//移動先がステージの外に出ないようにする
+		if (mapValue != 1)
+		{
+			pos_ = newPos;
+		}
+
+		else if (mapValue == 1)
+		{
+			switch (dir_)
+			{
+			case UP:
+				dir_ = RIGHT;
+				break;
+			case DOWN:
+				dir_ = LEFT;
+				break;
+			case LEFT:
+				dir_ = UP;
+				break;
+			case RIGHT:
+				dir_ = DOWN;
+				break;
+			default:
+				break;
+			}
+		}
+		prog_timer = 0.5f + prog_timer;
+	}
+}
+
+void Enemy::Chase()
+{
+	if (state_ == EnemyState::Chase)
+	{
+		DrawString(10, 10, "Chase", GetColor(0, 0, 0), TRUE);
+	}
+
+	Patrol();
+
+	Player* p = FindGameObject<Player>();
+	Point pPos = p->GetPlayerPos();
+
+	if (pPos.y < pos_.y)
+	{
+		dir_ = UP;
+	}
+	if (pPos.y > pos_.y)
+	{
+		dir_ = DOWN;
+	}
+	if (pPos.x < pos_.x)
+	{
+		dir_ = LEFT;
+	}
+	if (pPos.x > pos_.x)
+	{
+		dir_ = RIGHT;
+	}
+}
+
+void Enemy::Attack()
+{
+	if (state_ == EnemyState::Attack)
+	{
+		DrawString(10, 10, "Attack", GetColor(0, 0, 0), TRUE);
+	}
+	Chase();
+}
+
+void Enemy::Search()
+{
+	if (state_ == EnemyState::Search)
+	{
+		DrawString(10, 10, "Search", GetColor(0, 0, 0), TRUE);
+	}
+
+	float dt = Time::DeltaTime();
+	checkTimer = checkTimer - dt;
+	DrawFormatString(100, 10,GetColor(0, 0, 0),"%.2f", checkTimer, TRUE);
+	Chase();
 }
 
 bool Enemy::NearPlayer()
@@ -286,4 +370,22 @@ void Enemy::EnemyView()
 			/*if(cellX> enemyX - CHA_SIZE * 3&&)*/
 		}
 	}
+}
+
+bool Enemy::CheckAttackRange()
+{
+	Player* p = FindGameObject<Player>();
+	Point pPos = p->GetPlayerPos();
+
+	float dx = pPos.x - pos_.x;
+	float dy = pPos.y - pos_.y;
+
+	float range = ENEMY_SIZE * 1;
+
+	if ((dx * dx + dy * dy) <= (range * range))
+	{
+		return true;
+	}
+
+	return false;
 }
