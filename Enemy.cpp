@@ -38,16 +38,16 @@ void Enemy::Update()
 	dir_timer = dir_timer - dt;
 	prog_timer = prog_timer - dt;
 
-	if (dir_timer < 0.0f)
-	{
-		dir_ = (DIR)(GetRand(3));
-		dir_timer = 3.0f + dir_timer;
-	}
+	//if (dir_timer < 0.0f)
+	//{
+	//	dir_ = (DIR)(GetRand(3));
+	//	dir_timer = 3.0f + dir_timer;
+	//}
 
 	Point newPos = pos_;
 	if (prog_timer < 0.0f)
 	{
-		/*switch (dir_)
+		switch (dir_)
 		{
 		case UP:
 			newPos.y -= ENEMY_DRAW_SIZE;
@@ -63,7 +63,7 @@ void Enemy::Update()
 			break;
 		default:
 			break;
-		}*/
+		}
 
 		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x/CHA_SIZE, newPos.y / CHA_SIZE);
 		//移動先がステージの外に出ないようにする
