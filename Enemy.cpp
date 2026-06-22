@@ -37,28 +37,16 @@ void Enemy::Update()
 	float dt = Time::DeltaTime();
 	dir_timer = dir_timer - dt;
 	prog_timer = prog_timer - dt;
-
-<<<<<<< HEAD
 	//if (dir_timer < 0.0f)
 	//{
 	//	dir_ = (DIR)(GetRand(3));
 	//	dir_timer = 3.0f + dir_timer;
 	//}
-=======
-	/*if (dir_timer < 0.0f)
-	{
-		dir_ = (DIR)(GetRand(3));
-		dir_timer = 3.0f + dir_timer;
-	}*/
->>>>>>> 56d00b49137c649fe3da54082e890e4af953e9b1
 
 	Point newPos = pos_;
 	if (prog_timer < 0.0f)
 	{
-<<<<<<< HEAD
-=======
-		
->>>>>>> 56d00b49137c649fe3da54082e890e4af953e9b1
+
 		switch (dir_)
 		{
 		case UP:
@@ -69,7 +57,7 @@ void Enemy::Update()
 			break;
 		case LEFT:
 			newPos.x -= ENEMY_DRAW_SIZE;
-			break;
+			break;z
 		case RIGHT:
 			newPos.x += ENEMY_DRAW_SIZE;
 			break;
