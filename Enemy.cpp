@@ -121,6 +121,91 @@ void Enemy::Patrol()
 		DrawString(10, 10, "Patrol", GetColor(0, 0, 0), TRUE);
 	}
 
+	Move();
+
+	Point newPos = pos_;
+	int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
+	if (mapValue == 1)
+	{
+		switch (dir_)
+		{
+		case UP:
+			dir_ = RIGHT;
+			break;
+		case DOWN:
+			dir_ = LEFT;
+			break;
+		case LEFT:
+			dir_ = UP;
+			break;
+		case RIGHT:
+			dir_ = DOWN;
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+
+void Enemy::Chase()
+{
+	if (state_ == EnemyState::Chase)
+	{
+		DrawString(10, 10, "Chase", GetColor(0, 0, 0), TRUE);
+	}
+
+	Move();
+
+	Point newPos = pos_;
+	Player* p = FindGameObject<Player>();
+	Point pPos = p->GetPlayerPos();
+	int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
+	
+	float dx = pPos.x - pos_.x;
+	float dy = pPos.y - pos_.y;
+
+	if (abs(dx) > abs(dy))
+	{
+		if (dx > 0)
+			dir_ = RIGHT;
+		else
+			dir_ = LEFT;
+	}
+	else
+	{
+		if (dy > 0)
+			dir_ = DOWN;
+		else
+			dir_ = UP;
+	}
+
+}
+
+void Enemy::Attack()
+{
+	if (state_ == EnemyState::Attack)
+	{
+		DrawString(10, 10, "Attack", GetColor(0, 0, 0), TRUE);
+	}
+	Chase();
+}
+
+void Enemy::Search()
+{
+	if (state_ == EnemyState::Search)
+	{
+		DrawString(10, 10, "Search", GetColor(0, 0, 0), TRUE);
+	}
+
+	float dt = Time::DeltaTime();
+	checkTimer = checkTimer - dt;
+	DrawFormatString(100, 10, GetColor(0, 0, 0), "%.2f", checkTimer, TRUE);
+	Chase();
+}
+
+void Enemy::Move()
+{
 	static float dir_timer = 3.0f;
 	static float prog_timer = 0.5f;
 	float dt = Time::DeltaTime();
@@ -150,12 +235,12 @@ void Enemy::Patrol()
 		}
 
 		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
+		DrawFormatString(100, 100, GetColor(0, 0, 0), "%d", mapValue);
 		//移動先がステージの外に出ないようにする
 		if (mapValue != 1)
 		{
 			pos_ = newPos;
 		}
-
 		else if (mapValue == 1)
 		{
 			switch (dir_)
@@ -178,58 +263,7 @@ void Enemy::Patrol()
 		}
 		prog_timer = 0.5f + prog_timer;
 	}
-}
 
-void Enemy::Chase()
-{
-	if (state_ == EnemyState::Chase)
-	{
-		DrawString(10, 10, "Chase", GetColor(0, 0, 0), TRUE);
-	}
-
-	Patrol();
-
-	Player* p = FindGameObject<Player>();
-	Point pPos = p->GetPlayerPos();
-
-	if (pPos.y < pos_.y)
-	{
-		dir_ = UP;
-	}
-	if (pPos.y > pos_.y)
-	{
-		dir_ = DOWN;
-	}
-	if (pPos.x < pos_.x)
-	{
-		dir_ = LEFT;
-	}
-	if (pPos.x > pos_.x)
-	{
-		dir_ = RIGHT;
-	}
-}
-
-void Enemy::Attack()
-{
-	if (state_ == EnemyState::Attack)
-	{
-		DrawString(10, 10, "Attack", GetColor(0, 0, 0), TRUE);
-	}
-	Chase();
-}
-
-void Enemy::Search()
-{
-	if (state_ == EnemyState::Search)
-	{
-		DrawString(10, 10, "Search", GetColor(0, 0, 0), TRUE);
-	}
-
-	float dt = Time::DeltaTime();
-	checkTimer = checkTimer - dt;
-	DrawFormatString(100, 10,GetColor(0, 0, 0),"%.2f", checkTimer, TRUE);
-	Chase();
 }
 
 bool Enemy::NearPlayer()
@@ -309,6 +343,24 @@ bool Enemy::FindPlayer()
 	return false;
 }
 
+bool Enemy::CheckAttackRange()
+{
+	Player* p = FindGameObject<Player>();
+	Point pPos = p->GetPlayerPos();
+
+	float dx = pPos.x - pos_.x;
+	float dy = pPos.y - pos_.y;
+
+	float range = ENEMY_SIZE;
+
+	if ((dx * dx + dy * dy) <= (range * range))
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void Enemy::EnemyView()
 {
 	Point dir = { 0,1 };
@@ -372,20 +424,3 @@ void Enemy::EnemyView()
 	}
 }
 
-bool Enemy::CheckAttackRange()
-{
-	Player* p = FindGameObject<Player>();
-	Point pPos = p->GetPlayerPos();
-
-	float dx = pPos.x - pos_.x;
-	float dy = pPos.y - pos_.y;
-
-	float range = ENEMY_SIZE * 1;
-
-	if ((dx * dx + dy * dy) <= (range * range))
-	{
-		return true;
-	}
-
-	return false;
-}

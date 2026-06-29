@@ -20,12 +20,14 @@ public:
 	void Attack();
 	void Search();
 
+	void Move();
+
 private:
 	bool NearPlayer();
 	bool FindPlayer();
-	void EnemyView();
-
 	bool CheckAttackRange();
+
+	void EnemyView();
 
 	enum class EnemyState
 	{
