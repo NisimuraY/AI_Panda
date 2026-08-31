@@ -66,10 +66,11 @@ void Enemy::Update()
 		{
 			state_ = EnemyState::Chase;
 		}
-		if (!(NearPlayer()) && !(FindPlayer()))
+		if (!NearPlayer() && !FindPlayer())
 		{
 			state_ = EnemyState::Search;
 		}
+
 		break;
 
 	case EnemyState::Search:
@@ -116,9 +117,12 @@ void Enemy::Draw()
 
 void Enemy::Patrol()
 {
+	SetFontSize(50);
 	if (state_ == EnemyState::Patrol)
 	{
-		DrawString(10, 10, "Patrol", GetColor(0, 0, 0), TRUE);
+		SetFontSize(50);
+		DrawString(35, 30, "Patrol", GetColor(0, 0, 0), TRUE);
+		SetFontSize(20);
 	}
 
 	Move();
@@ -152,7 +156,9 @@ void Enemy::Chase()
 {
 	if (state_ == EnemyState::Chase)
 	{
-		DrawString(10, 10, "Chase", GetColor(0, 0, 0), TRUE);
+		SetFontSize(50);
+		DrawString(35, 30, "Chase", GetColor(0, 0, 0), TRUE);
+		SetFontSize(20);
 	}
 
 	Move();
@@ -186,7 +192,9 @@ void Enemy::Attack()
 {
 	if (state_ == EnemyState::Attack)
 	{
-		DrawString(10, 10, "Attack", GetColor(0, 0, 0), TRUE);
+		SetFontSize(50);
+		DrawString(35, 30, "Attack", GetColor(0, 0, 0), TRUE);
+		SetFontSize(20);
 	}
 	Chase();
 }
@@ -195,12 +203,16 @@ void Enemy::Search()
 {
 	if (state_ == EnemyState::Search)
 	{
-		DrawString(10, 10, "Search", GetColor(0, 0, 0), TRUE);
+		SetFontSize(50);
+		DrawString(35, 30, "Search", GetColor(0, 0, 0), TRUE);
+		SetFontSize(20);
 	}
 
 	float dt = Time::DeltaTime();
 	checkTimer = checkTimer - dt;
-	DrawFormatString(100, 10, GetColor(0, 0, 0), "%.2f", checkTimer, TRUE);
+	SetFontSize(50);
+	DrawFormatString(200, 30, GetColor(0, 0, 0), "%.2f", checkTimer, TRUE);
+	SetFontSize(20);
 	Chase();
 }
 
@@ -235,7 +247,7 @@ void Enemy::Move()
 		}
 
 		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
-		DrawFormatString(100, 100, GetColor(0, 0, 0), "%d", mapValue);
+		
 		//移動先がステージの外に出ないようにする
 		if (mapValue != 1)
 		{
@@ -274,7 +286,7 @@ bool Enemy::NearPlayer()
 	float dx = pPos.x - pos_.x;
 	float dy = pPos.y - pos_.y;
 
-	float range = ENEMY_SIZE * 5;
+	float range = ENEMY_SIZE * 2;
 
 	if ((dx * dx + dy * dy) <= (range * range))
 	{
@@ -419,7 +431,22 @@ void Enemy::EnemyView()
 
 				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 			}
-			/*if(cellX> enemyX - CHA_SIZE * 3&&)*/
+			if (cellX > enemyX - CHA_SIZE * 2 
+				&& cellX > enemyX + CHA_SIZE * 2)
+			{
+				SetDrawBlendMode(DX_BLENDMODE_ALPHA, 80);
+
+				DrawBox(
+					x * CHA_SIZE,
+					y * CHA_SIZE,
+					(x + 1) * CHA_SIZE,
+					(y + 1) * CHA_SIZE,
+					GetColor(255, 255, 0),
+					TRUE
+				);
+
+				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+			}
 		}
 	}
 }
