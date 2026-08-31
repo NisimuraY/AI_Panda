@@ -157,7 +157,7 @@ bool Enemy::NearPlayer()
 	float dx = pPos.x - pos_.x;
 	float dy = pPos.y - pos_.y;
 
-	float range = ENEMY_SIZE * 3;
+	float range = ENEMY_SIZE * 5;
 
 	if ((dx * dx + dy * dy) <= (range * range))
 	{
