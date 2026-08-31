@@ -14,9 +14,29 @@ public:
 	~Enemy();
 	void Update() override;
 	void Draw() override;
+
+	void Patrol();
+	void Chase();
+	void Attack();
+	void Search();
+
+	void Move();
+
 private:
 	bool NearPlayer();
 	bool FindPlayer();
+	bool CheckAttackRange();
+
 	void EnemyView();
+
+	enum class EnemyState
+	{
+		Patrol,
+		Chase,
+		Attack,
+		Search
+	};
+
+	enum class EnemyState state_;
 };
 
