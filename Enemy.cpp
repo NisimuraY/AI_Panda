@@ -62,7 +62,7 @@ void Enemy::Update()
 	case EnemyState::Attack:
 		Attack();	
 
-		if (!CheckAttackRange()&& NearPlayer())
+		if (!CheckAttackRange() && FindPlayer())
 		{
 			state_ = EnemyState::Chase;
 		}
@@ -286,7 +286,7 @@ bool Enemy::NearPlayer()
 	float dx = pPos.x - pos_.x;
 	float dy = pPos.y - pos_.y;
 
-	float range = ENEMY_SIZE * 2;
+	float range = ENEMY_SIZE * 1;
 
 	if ((dx * dx + dy * dy) <= (range * range))
 	{
@@ -431,8 +431,10 @@ void Enemy::EnemyView()
 
 				SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 			}
-			if (cellX > enemyX - CHA_SIZE * 2 
-				&& cellX > enemyX + CHA_SIZE * 2)
+			if (cellX > enemyX - CHA_SIZE * 2
+			 && cellX < enemyX + CHA_SIZE * 2
+			 && cellY > enemyY - CHA_SIZE * 2
+			 && cellY < enemyY + CHA_SIZE * 2)
 			{
 				SetDrawBlendMode(DX_BLENDMODE_ALPHA, 80);
 
@@ -441,7 +443,7 @@ void Enemy::EnemyView()
 					y * CHA_SIZE,
 					(x + 1) * CHA_SIZE,
 					(y + 1) * CHA_SIZE,
-					GetColor(255, 255, 0),
+					GetColor(255, 0, 0),
 					TRUE
 				);
 
